@@ -15,12 +15,12 @@ import setuptools
 
 setuptools.setup(
     name="hfos-warmongo",
-    version="0.5.5",
-    description="JSON-Schema-based ORM for MongoDB",
+    version="0.6.0",
+    description="JSON-Schema-based ORM for MongoDB and SQLAlchemy",
     author="Heiko 'riot' Weinen",
     author_email="riot@hackerfleet.org",
     url="http://github.com/Hackerfleet/hfos-warmongo",
-    keywords=["mongodb", "jsonschema"],
+    keywords=["mongodb", "sqlalchemy", "jsonschema", "orm"],
     packages=["warmongo"],
     classifiers=[
         "Programming Language :: Python",
@@ -36,8 +36,11 @@ setuptools.setup(
   Allows you to build models validated against a JSON-schema file, and save
   them to MongoDB.
 """,
-    install_requires=["pymongo>=3.2",
-                      "jsonschema>=2.6.0",
-                      ],
+    install_requires=[
+        "pymongo>=3.2",
+        "jsonschema>=2.6.0",
+        "deepdiff>=3.2.1",
+        "sqlalchemy>=1.2.14"
+    ],
     test_suite="tests"
 )

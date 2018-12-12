@@ -18,11 +18,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .model import Model as WarmongoModel
+from .model_mongodb import Model as WarmongoModel
+from .model_sqlalchemy import Model as SQLModel
 from .exceptions import InvalidSchemaException
 
 from copy import deepcopy
-from .database import connect
+from .database import connect, connect_sql
 import pymongo
 
 # Export connect so we can do warmongo.connect()
@@ -34,7 +35,8 @@ DESCENDING = pymongo.DESCENDING
 
 
 def model_factory(schema, base_class=WarmongoModel):
-    ''' Construct a model based on `schema` that inherits from `base_class`. '''
+    """ Construct a model based on `schema` that inherits from `base_class`."""
+
     if not schema.get("id"):
         raise InvalidSchemaException("No id field in schema!")
 
@@ -42,15 +44,37 @@ def model_factory(schema, base_class=WarmongoModel):
         raise InvalidSchemaException("No properties field in schema!")
 
     if not schema.get("name"):
-        raise InvalidSchemaException("Warmongo models require a top-level 'name' attribute!")
+        raise InvalidSchemaException(
+            "Warmongo models require a top-level 'name' attribute!")
+
+    if schema.get('sql', False):
+        print("SQL Schema detected!")
+        base_class = SQLModel
+
+        from .database import sql_database
+        engine = sql_database
+        primary = None
+        for item in schema['properties']:
+            thing = schema['properties'][item].get('primary', False)
+            if thing is not False:
+                assert primary is None
+                primary = item
+    else:
+        engine = None
+        primary = None
 
     schema = deepcopy(schema)
 
     class Model(base_class):
         _schema = schema
+        _engine = engine
+        _primary = primary
 
         def __init__(self, *args, **kwargs):
             self._schema = schema
+            self._engine = engine
+            self._primary = primary
+
             base_class.__init__(self, *args, **kwargs)
 
     Model.__name__ = str(schema["name"])
